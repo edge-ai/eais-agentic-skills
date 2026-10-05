@@ -1,0 +1,3858 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "Edgematrix EdgeAI Intelligent Video Analytic service 🎥",
+    "description": "\n## Overview\nThis microservice provides APIs to manage the\npipelines, media, and AI processors. It also\nprovides APIs to manage the snapshot records.\n\n## Actions\nUsing these APIs, users can perform the following operations:\n\n- **Create, update, and delete pipelines**.\n- **Create, update, and delete media**.\n- **Create, update, and delete AI processors**.\n- **Create, search and delete snapshot records**.\n",
+    "contact": {
+      "name": "EDGEMATRIX Inc.",
+      "url": "https://edgematrix.com/",
+      "email": "info@edgematrix.com"
+    },
+    "version": "0.19.0"
+  },
+  "servers": [{ "url": "/ms3" }],
+  "paths": {
+    "/aiprocessors": {
+      "get": {
+        "tags": ["AI Processors"],
+        "summary": "Get all the registered AI Processors",
+        "description": "Get all the registered AI Processors.\n\nNo parameters are required for this request.\n\nReads all currently registered AI Processors \nand returns a list of them.",
+        "operationId": "get_all_aiprocessors_aiprocessors_get",
+        "responses": {
+          "200": {
+            "description": "A list of registered AI Processors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get All Aiprocessors Aiprocessors Get",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SafeAiProcessorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aiprocessor/upload": {
+      "post": {
+        "tags": ["AI Processors"],
+        "summary": "Upload an AI Processor",
+        "description": "Upload a tgz or zip archive containing the files of the AI Processor and json manifest.\n\nThe archive must be specified in the request body.\nThe auto_register parameter can be set to True to \nautomatically register the AI Processor on the Triton \nserver when MS3 starts.\nThe force parameter can be set to True to update the\nAI Processor even if it is registered on the Triton server.\n\nIf the current stack mode is CP or development, the upload\nis not allowed and a 403 error is returned.\nIf the AI Processor is not valid, a 422 error is returned.\nIf the AI Processor already exists and override is set \nto False, a 409 error is returned. If the upload fails, \na 500 error is returned. If the upload succeeds, the \nuploaded AI Processor information is returned.",
+        "operationId": "upload_aiprocessor_aiprocessor_upload_post",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "title": "Auto Register",
+              "type": "boolean",
+              "default": false
+            },
+            "name": "auto_register",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": { "title": "Force", "type": "boolean", "default": false },
+            "name": "force",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_aiprocessor_aiprocessor_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Uploaded AI Processor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SafeAiProcessorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "**E3106** Forbidden.\n    The AI Processor upload is not allowed.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "**E3102** Conflict.\n    The AI Processor specified by the user already exists.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "**E3103** Unprocessable Entity.\n    The AI Processor specified by the user is not in the correct format.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "**E3105** Internal Server Error.\n    The AI Processor specified by the user failed to upload.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aiprocessor/scan": {
+      "post": {
+        "tags": ["AI Processors"],
+        "summary": "Scan the AI Processor folder for all AI Processors",
+        "description": "Scan the AI Processor folder and install or update all the found AI Processors.\n\nNo parameters are required for this request.\n\nIf the force parameter is set to True, the AI Processor\nwill be updated even if it is already registered.\nIf it is set to False, the AI Processor will be installed\nonly if it is not found.\n\nScans the AI Processor folder for new AI Processors \nand returns a list of them.\nTo see the details of the result, check the logs.",
+        "operationId": "scan_all_aiprocessors_aiprocessor_scan_post",
+        "parameters": [
+          {
+            "required": false,
+            "schema": { "title": "Force", "type": "boolean", "default": true },
+            "name": "force",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scanned AI Processors",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Scan All Aiprocessors Aiprocessor Scan Post",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AiProcessor" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aiprocessor/scan/{uuid}": {
+      "post": {
+        "tags": ["AI Processors"],
+        "summary": "Scan the AI Processor folder for new AI Processors",
+        "description": "Scan the specified AI Processor folder and install or update the AI Processor.\n\nThe AI Processor UUID must be specified in the path.\n\nIf the force parameter is set to True, the AI Processor\nwill be updated even if it is already registered.\nIf it is set to False, the AI Processor will be installed\nonly if it is not found.\n\nIf the AIP registration is not successful, an error response is returned.",
+        "operationId": "scan_aiprocessor_aiprocessor_scan__uuid__post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": { "title": "Force", "type": "boolean", "default": true },
+            "name": "force",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scanned AI Processors",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AiProcessor" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aiprocessor/{uuid}": {
+      "get": {
+        "tags": ["AI Processors"],
+        "summary": "Get the details of the specified AI Processor",
+        "description": "Get the details of the specified registered AI Processor.\n\nThe AI Processor UUID must be specified in the path.\n\nIf the AI Processor is not found, a 404 error is returned.\nIf the AI Processor is found, its details are returned.",
+        "operationId": "get_aiprocessor_aiprocessor__uuid__get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI Processor details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SafeAiProcessorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3101** Not Found.\n    The AI Processor specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["AI Processors"],
+        "summary": "Delete the specified AI Processor",
+        "description": "Delete the specified AI Processor.\n\nThe AI Processor UUID must be specified in the path.\nIf the force parameter is set to True, the AI Processor \nwill be deleted even if it is used in a running pipeline.\nIn this case, the pipeline will be deactivated and marked as invalid.\n\nIf the current stack mode is CP or development, the deletion\nis not allowed and a 403 error is returned.\nIf the AI Processor is not found, a 404 error is returned.\nIf the AI Processor is found, it is deleted and the response is returned.",
+        "operationId": "delete_aiprocessor_aiprocessor__uuid__delete",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": { "title": "Force", "type": "boolean", "default": false },
+            "name": "force",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI Processor deletion response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiProcessorDeletionResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "**E3113** Forbidden.\n    The AI Processor deletion is not allowed.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3101** Not Found.\n    The AI Processor specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "**E3107** Internal Server Error.\n    The AI Processor specified by the user failed to delete\n    from the file system.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aiprocessor/{uuid}/options/validate": {
+      "post": {
+        "tags": ["AI Processors"],
+        "summary": "Validate the callback option values of the specified AI Processor",
+        "description": "Validate the callback option values of the specified AI Processor.\n\nThe AI Processor UUID must be specified in the path.\nThe options parameter contains the option values to validate.\n\nIf the AI Processor is not found, a 404 error is returned.\nIf the option validation fails, a 422 error is returned.\nIf the option validation succeeds, a success response is returned.",
+        "operationId": "validate_callback_option_values_aiprocessor__uuid__options_validate_post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "title": "Options", "type": "object" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "AI Processor callback option validation response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiProcessorCallbackOptionValidationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3101** Not Found.\n    The AI Processor specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "**E3114** Unprocessable Entity.\n    The AI Processor options specified by the user are invalid.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aiprocessor/{uuid}/icon": {
+      "get": {
+        "tags": ["AI Processors"],
+        "summary": "Get the icon of the specified AI Processor",
+        "description": "Get the icon of the specified AI Processor.\n\nThe AI Processor UUID must be specified in the path.\n\nIf the AI Processor is not found, a 404 error is returned.\nIf the AI Processor is found, its icon is returned\nas a png file.",
+        "operationId": "get_aiprocessor_icon_aiprocessor__uuid__icon_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI Processor icon",
+            "content": { "image/png": {} }
+          },
+          "404": {
+            "description": "**E3101** Not Found.\n    The AI Processor specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "**E3104** Unprocessable Entity.\n    There is a file or a directory missing in the AI Processor.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aiprocessor/{uuid}/changelog": {
+      "get": {
+        "tags": ["AI Processors"],
+        "summary": "Get the changelog of the specified AI Processor",
+        "description": "Get the changelog of the specified AI Processor.\n\nThe AI Processor UUID must be specified in the path.\nThe html_format parameter can be set to True to\nreturn the changelog in HTML format. If it is set to False,\nthe changelog is returned in markdown format.\n\nIf the AI Processor is not found, a 404 error is returned.\nIf the AI Processor is found, its changelog is returned \nin the specified format.",
+        "operationId": "get_aiprocessor_changelog_aiprocessor__uuid__changelog_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Html Format",
+              "type": "boolean",
+              "default": true
+            },
+            "name": "html_format",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI Processor changelog",
+            "content": {
+              "application/json": { "schema": {} },
+              "text/markdown": {}
+            }
+          },
+          "404": {
+            "description": "**E3101** Not Found.\n    The AI Processor specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "**E3104** Unprocessable Entity.\n    There is a file or a directory missing in the AI Processor.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aiprocessor/{uuid}/labels": {
+      "get": {
+        "tags": ["AI Processors"],
+        "summary": "Get the labels of the specified AI Processor PGIE model",
+        "description": "Get the labels of the specified AI Processor PGIE model.\n\nThe AI Processor UUID must be specified in the path.\n\nIf the AI Processor is not found, a 404 error is returned.\nIf the AI Processor is found, its labels are returned.",
+        "operationId": "get_aiprocessor_labels_aiprocessor__uuid__labels_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PGIE Labels of the AI Processor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AIProcessorPGIELabelsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3101** Not Found.\n    The AI Processor specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aiprocessor/{uuid}/status": {
+      "get": {
+        "tags": ["AI Processors"],
+        "summary": "Get the status of the specified AI Processor",
+        "description": "Check the status of the deployment on Triton server.\nIt also checks if the AIP is assigned to any pipeline.\n\nThe AI Processor UUID must be specified in the path.\n\nIf the AI Processor is not found, a 404 error is returned.\nIf the AI Processor is found, its status is returned.",
+        "operationId": "check_aiprocessor_status_aiprocessor__uuid__status_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI Processor registration status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiProcessorRegistrationStatusResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3101** Not Found.\n    The AI Processor specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "502": {
+            "description": "**E3108** Bad Gateway.\n    The Triton server is not available and the\n    MS3 service failed to connect to it.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aiprocessor/{uuid}/register": {
+      "post": {
+        "tags": ["AI Processors"],
+        "summary": "Register the specified AI Processor on the Triton server",
+        "description": "Register the AIP on the Triton server.\n\nThe AI Processor UUID must be specified in the path.\n\nIf the AI Processor is not found, a 404 error is returned.\nIf the AI Processor is found, the AIP is registered on \nthe Triton server.\n\nTo register the AIP on the Triton server, this API creates\nsymbolic links from the AIP repository folder to the Triton\nmodel repository folder.\nSee [the Triton server documentation](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_management.md)\nfor more details.",
+        "operationId": "register_aiprocessor_aiprocessor__uuid__register_post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI Processor registration result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiProcessorRegistrationResultResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3101** Not Found.\n    The AI Processor specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/aiprocessor/{uuid}/unregister": {
+      "post": {
+        "tags": ["AI Processors"],
+        "summary": "Unregister the specified AI Processor from the Triton server",
+        "description": "Unregister the AIP from the Triton server,\n\nThe AI Processor UUID must be specified in the path.\n\nIf the AI Processor is not found, a 404 error is returned.\nIf the AI Processor is found, the AIP is unregistered from\nthe Triton server.\n\nTo unregister the AIP on the Triton server, this API removes\nfrom the Triton model repository folder.\nSee [the Triton server documentation](https://github.com/triton-inference-server/server/blob/main/docs/user_guide/model_management.md)\nfor more details.",
+        "operationId": "unregister_aiprocessor_aiprocessor__uuid__unregister_post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI Processor registration result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiProcessorRegistrationResultResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3101** Not Found.\n    The AI Processor specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/medias": {
+      "get": {
+        "tags": ["Media"],
+        "summary": "Get All Available Media",
+        "description": "Get all the Media registered in this device.\n\nNo parameters are required for this request.\n\nReads all currently registered Media \nand returns a list of them.",
+        "operationId": "get_all_media_medias_get",
+        "responses": {
+          "200": {
+            "description": "Media list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get All Media Medias Get",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Media" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{uuid}": {
+      "get": {
+        "tags": ["Media"],
+        "summary": "Get Detailed Information of the Specified Media",
+        "description": "Get detailed information of the specified Media.\n\nThe media UUID must be specified in the request path.\n\nReturns detailed information of the specified Media.",
+        "operationId": "get_media_media__uuid__get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Media information",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Media" }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3201** Not Found.\n    The Media specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Media"],
+        "summary": "Update media interface",
+        "description": "Update a RTSP or USB or file media interface",
+        "operationId": "update_media_media__uuid__put",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_media_media__uuid__put"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Media" }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3201** Not Found.\n    The Media specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Media"],
+        "summary": "Delete Specified Media",
+        "description": "Delete the specified Media.\n\nThe Media UUID must be specified in the path.\nIf the force parameter is set to True, the Media\nwill be deleted even if it is used in a running pipeline.\n\nIf the Media is not found, a 404 error is returned.\nIf the Media is found, it is deleted and the response is returned.",
+        "operationId": "delete_media_media__uuid__delete",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": { "title": "Force", "type": "boolean", "default": false },
+            "name": "force",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Delete Media Media  Uuid  Delete",
+                  "enum": [true],
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3201** Not Found.\n    The Media specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{uuid}/status": {
+      "get": {
+        "tags": ["Media"],
+        "summary": "Check the specified Media is playable",
+        "description": "Check the specified Media is playable and assigned to pipelines.\n\nThe media UUID must be specified in the request path.\nIf the check parameter is set to True, the Media status \nis checked immediately. the response time may be longer\nin this case. Otherwise, the cached status is returned.\nthe status is updated every 60 seconds by this service.\n\nReturns the status of the specified Media, which includes:\n- playable: True if the Media is playable, False otherwise\n- reason: The reason why the Media is not playable\n- assigned_pipelines: The dictionary of pipelines that the Media is assigned to (uuid: name)",
+        "operationId": "check_media_status_media__uuid__status_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": { "title": "Check", "type": "boolean", "default": false },
+            "name": "check",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Media is playable",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MediaStatusResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3201** Not Found.\n    The Media specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/{uuid}/preview": {
+      "get": {
+        "tags": ["Media"],
+        "summary": "Get the preview image of the specified Media",
+        "description": "Get the preview image of the specified Media.\n\nThe media UUID must be specified in the request path.\n\nIf the Media is not found, a 404 error is returned.\nIf the preview image is not found, a 404 error is returned.\nReturns the preview image of the specified Media.",
+        "operationId": "get_media_preview_media__uuid__preview_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Thumbnail",
+              "type": "boolean",
+              "default": true
+            },
+            "name": "thumbnail",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Preview image" },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Media"],
+        "summary": "Update the preview image of the specified Media",
+        "description": "Update the preview image of the specified Media.\n\nThe media UUID must be specified in the request path.\n\nIf the Media is not found, a 404 error is returned.\nIf the preview image is not found, a 404 error is returned.\nReturns the preview image of the specified Media.",
+        "operationId": "update_media_preview_media__uuid__preview_put",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Preview image",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaPreviewUpdateResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media": {
+      "post": {
+        "tags": ["Media"],
+        "summary": "Create media interface",
+        "description": "Create a RTSP or USB or file media interface",
+        "operationId": "create_media_media_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_media_media_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Media" }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipelines": {
+      "get": {
+        "tags": ["Pipelines"],
+        "summary": "Get all the registered pipelines",
+        "description": "Get all the registered pipelines.\n\nNo parameters are required for this request.\n\nReads all currently registered pipelines.\nThe response does not include detailed information\nsuch as the AI Processor, input sources, output sinks.\nTo get those details, use the /pipeline/{uuid} endpoint.",
+        "operationId": "get_all_pipelines_pipelines_get",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "title": "Running Only",
+              "type": "boolean",
+              "default": false
+            },
+            "name": "running_only",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of registered pipelines",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get All Pipelines Pipelines Get",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SimplifiedComplexPipelineResponse"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/snapshots": {
+      "get": {
+        "tags": ["Pipelines"],
+        "summary": "Get snapshot record list",
+        "description": "Get the list of snapshot records.\n\nThe pipeline UUID and media UUID are optional parameters.\n`since` and `until` are optional parameters to filter the records by timestamp.\n\nIf no parameters are specified, all snapshot records are returned.",
+        "operationId": "list_snapshots_pipeline_snapshots_get",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "title": "Pipeline Uuid",
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "name": "pipeline_uuid",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Media Uuid",
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "name": "media_uuid",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Since",
+              "type": "string",
+              "format": "date-time"
+            },
+            "name": "since",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Until",
+              "type": "string",
+              "format": "date-time"
+            },
+            "name": "until",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Sort By",
+              "enum": ["timestamp", "media", "pipeline"],
+              "type": "string",
+              "default": "timestamp"
+            },
+            "name": "sort_by",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Reverse",
+              "type": "boolean",
+              "default": false
+            },
+            "name": "reverse",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": { "title": "Page", "type": "integer", "default": 1 },
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": { "title": "Size", "type": "integer", "default": 10 },
+            "name": "size",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Snapshot record list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Pipelines"],
+        "summary": "Delete the specified snapshot records",
+        "description": "Delete the specified snapshot records.\n\nThe pipeline UUID and media UUID are optional parameters.\n`since` and `until` are optional parameters to filter the records by timestamp.\n\nIf no snapshot is found, a 404 error is returned.",
+        "operationId": "delete_snapshots_pipeline_snapshots_delete",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "title": "Pipeline Uuid",
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "name": "pipeline_uuid",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Media Uuid",
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "name": "media_uuid",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Since",
+              "type": "string",
+              "format": "date-time"
+            },
+            "name": "since",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Until",
+              "type": "string",
+              "format": "date-time"
+            },
+            "name": "until",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineResultResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3316** Not Found.\n    The Snapshot record specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/snapshots/download": {
+      "get": {
+        "tags": ["Pipelines"],
+        "summary": "Download the images of the specified snapshot records",
+        "description": "Download the images of the specified snapshot records.\nIt will be downloaded as a zip file.\n\nThe pipeline UUID and media UUID are optional parameters.\n`since` and `until` are optional parameters to filter the records by timestamp.\n\nIf no snapshot is found, a 404 error is returned.",
+        "operationId": "download_snapshots_pipeline_snapshots_download_get",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "title": "Pipeline Uuid",
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "name": "pipeline_uuid",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Media Uuid",
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "name": "media_uuid",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Since",
+              "type": "string",
+              "format": "date-time"
+            },
+            "name": "since",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Until",
+              "type": "string",
+              "format": "date-time"
+            },
+            "name": "until",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Zipped snapshot files" },
+          "404": {
+            "description": "**E3316** Not Found.\n    The Snapshot record specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/snapshot/{uuid}": {
+      "get": {
+        "tags": ["Pipelines"],
+        "summary": "Get the image of the specified snapshot record",
+        "description": "Get the image of the specified snapshot record.\n\nThe snapshot UUID must be specified in the path.\nIf the thumbnail parameter is set to True, the thumbnail image is returned.\n\nIf the snapshot is not found, a 404 error is returned.",
+        "operationId": "show_snapshot_pipeline_snapshot__uuid__get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": {
+              "title": "Thumbnail",
+              "type": "boolean",
+              "default": false
+            },
+            "name": "thumbnail",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Snapshot record image" },
+          "404": {
+            "description": "**E3316** Not Found.\n    The Snapshot record specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Pipelines"],
+        "summary": "Delete the specified snapshot record",
+        "description": "Delete the specified snapshot record.\n\nThe snapshot UUID must be specified in the path.\n\nIf the snapshot is not found, a 404 error is returned.",
+        "operationId": "delete_snapshot_pipeline_snapshot__uuid__delete",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineResultResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3316** Not Found.\n    The Snapshot record specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/snapshot/download": {
+      "post": {
+        "tags": ["Pipelines"],
+        "summary": "Download the image of the specified snapshot records",
+        "description": "Download the image of the specified snapshot records.\nIt will be downloaded as a zip file.\n\nThe snapshot UUIDs must be specified in the request body.\n\nIf no snapshot is found, a 404 error is returned.",
+        "operationId": "download_snapshots_pipeline_snapshot_download_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Snapshot Uuid List",
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": { "description": "Zipped snapshot files" },
+          "404": {
+            "description": "**E3316** Not Found.\n    The Snapshot record specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/{uuid}": {
+      "get": {
+        "tags": ["Pipelines"],
+        "summary": "Get the details of the specified pipeline",
+        "description": "Get the details of the specified registered pipeline.\n\nThe pipeline UUID must be specified in the path.\n\nIf the pipeline is not found, a 404 error is returned.\nIf the pipeline is found, its details are returned.",
+        "operationId": "get_pipeline_pipeline__uuid__get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pipeline details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SafePipelineResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3301** Not Found.\n    The Pipeline specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Pipelines"],
+        "summary": "Update pipeline",
+        "description": "update the pipeline specified by UUID.\n\nThe pipeline UUID must be specified in the path.\nThe pipeline setup must be specified in the request body.\n\nIf specified Pipeline, Media or AI Processor is not found, a 404 error is returned.\nIf user changed the pipeline name and it is already registered, a 409 error is returned.\nIf the pipeline is updated, its details are returned.",
+        "operationId": "update_pipeline_pipeline__uuid__put",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_pipeline_pipeline__uuid__put"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated pipeline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SafePipelineResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "**E3304** Conflict.\n    The Pipeline name specified by the user is duplicated.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Pipelines"],
+        "summary": "Delete the specified pipeline",
+        "description": "Delete the specified pipeline.\n\nThe pipeline UUID must be specified in the path.\nIf the force parameter is set to True, the pipeline\nwill be focefully killed.\n\nIf the Media is not found, a 404 error is returned.\nIf the Media is found, it is deleted and the response is returned.",
+        "operationId": "delete_pipeline_pipeline__uuid__delete",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": { "title": "Force", "type": "boolean", "default": false },
+            "name": "force",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "True if the pipeline was deleted, False otherwise",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Delete Pipeline Pipeline  Uuid  Delete",
+                  "enum": [true],
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3301** Not Found.\n    The Pipeline specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline": {
+      "post": {
+        "tags": ["Pipelines"],
+        "summary": "Create new pipeline",
+        "description": "create new pipeline.\n\nThe pipeline setup must be specified in the request body.\n\nIf specified Media or AI Processor is not found, a 404 error is returned.\nIf the pipeline name is already registered, a 409 error is returned.\nIf the pipeline is created, its details are returned.",
+        "operationId": "create_new_pipeline_pipeline_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_new_pipeline_pipeline_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Created pipeline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SafePipelineResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "**E3304** Conflict.\n    The Pipeline name specified by the user is duplicated.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/{uuid}/options": {
+      "get": {
+        "tags": ["Pipelines"],
+        "summary": "Get pipeline callback options",
+        "description": "**[Alpha feature]**\n\nget the pipeline specified by UUID.\n\nThe pipeline UUID must be specified in the path.\nIf specified Pipeline, Media or AI Processor is not found, a 404 error is returned.\nIf user changed the pipeline name and it is already registered, a 409 error is returned.",
+        "operationId": "get_callback_options_pipeline__uuid__options_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pipeline callback options",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "**E3304** Conflict.\n    The Pipeline name specified by the user is duplicated.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "**E3303** Unprocessable Entity.\n    User tried to make the Pipeline configuration,\n    but the pipeline configuration is invalid.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Pipelines"],
+        "summary": "Update pipeline callback options",
+        "description": "update the pipeline specified by UUID.\n\nThe pipeline UUID must be specified in the path.\nThe callback option setup must be specified in the request body.\nIf specified Pipeline, Media or AI Processor is not found, a 404 error is returned.\nIf user changed the pipeline name and it is already registered, a 409 error is returned.\nIf the pipeline is updated, its details are returned.",
+        "operationId": "update_callback_options_pipeline__uuid__options_put",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_callback_options_pipeline__uuid__options_put"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated pipeline",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "**E3304** Conflict.\n    The Pipeline name specified by the user is duplicated.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "**E3303** Unprocessable Entity.\n    User tried to make the Pipeline configuration,\n    but the pipeline configuration is invalid.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/{uuid}/start": {
+      "post": {
+        "tags": ["Pipelines"],
+        "summary": "Start Pipeline",
+        "description": "Start the specified pipeline.\n\nThe pipeline UUID must be specified in the path.\n\nIf the pipeline is not found, a 404 error is returned.\nIf the pipeline is found, it is started and the response is returned.",
+        "operationId": "start_pipeline_pipeline__uuid__start_post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Started pipeline",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SafePipelineResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/{uuid}/stop": {
+      "post": {
+        "tags": ["Pipelines"],
+        "summary": "Stop Pipeline",
+        "description": "Stop the specified pipeline.\n\nThe pipeline UUID must be specified in the path.\nIf the force parameter is set to True, the pipeline\nwill be focefully killed.\n\nIf the pipeline is not found, a 404 error is returned.\nIf the pipeline is found, it is stopped and the response is returned.",
+        "operationId": "stop_pipeline_pipeline__uuid__stop_post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          },
+          {
+            "required": false,
+            "schema": { "title": "Force", "type": "boolean", "default": false },
+            "name": "force",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Result of the stop operation",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/{uuid}/fps": {
+      "get": {
+        "tags": ["Pipelines"],
+        "summary": "Get the FPS of the specified pipeline",
+        "description": "Get the FPS of the specified pipeline.\n\nThe pipeline UUID must be specified in the path.\n\nIf the pipeline is not found, a 404 error is returned.\nIf the pipeline is not running, None is returned. # TODO: error is better\nIf the pipeline is running, its FPS and average FPS are returned in float format.",
+        "operationId": "get_pipeline_fps_pipeline__uuid__fps_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pipeline FPS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Pipeline Fps Pipeline  Uuid  Fps Get",
+                  "type": "object",
+                  "additionalProperties": { "type": "number" }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3301** Not Found.\n    The Pipeline specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/{uuid}/status": {
+      "get": {
+        "tags": ["Pipelines"],
+        "summary": "Get the status of the specified pipeline",
+        "description": "Get the status of the specified pipeline.\n\nThe pipeline UUID must be specified in the path.\n\nIf the pipeline is not found, a 404 error is returned.\nIf the pipeline is found, its status is returned.",
+        "operationId": "get_pipeline_status_pipeline__uuid__status_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pipeline status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Pipeline Status Pipeline  Uuid  Status Get",
+                  "type": "object",
+                  "additionalProperties": { "type": "string" }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3301** Not Found.\n    The Pipeline specified by the user was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/{uuid}/snapshot/trigger": {
+      "post": {
+        "tags": ["Pipelines"],
+        "summary": "Trigger Snapshot",
+        "description": "Triggers a snapshot for the specified pipeline.\n\nThe pipeline UUID must be specified in the path.\nThe input ID and OSD parameters are required.\nIf you specify -1 for the input ID, the tiler view\nwill be used for the snapshot.\n\nIf the pipeline or input ID is not found, a 404 error is returned.\nIf the pipeline is not running, a 422 error is returned.\nIf the snapshot is triggered too frequently, a 429 error is returned.",
+        "operationId": "trigger_snapshot_pipeline__uuid__snapshot_trigger_post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          },
+          {
+            "required": true,
+            "schema": { "title": "Input Id", "type": "integer" },
+            "name": "input_id",
+            "in": "query"
+          },
+          {
+            "required": true,
+            "schema": { "title": "Osd", "type": "boolean" },
+            "name": "osd",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/{uuid}/tiler": {
+      "get": {
+        "tags": ["Pipelines"],
+        "summary": "Get Tiler",
+        "description": "Get the tiler settings of the specified pipeline.\n\nThe pipeline UUID must be specified in the path.\n\nIf the pipeline is not found, a 404 error is returned.\nIf the pipeline does not have a tiler, a 422 error is returned.",
+        "operationId": "get_tiler_pipeline__uuid__tiler_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/{uuid}/set_tiler/{index}": {
+      "post": {
+        "tags": ["Pipelines"],
+        "summary": "Do Change Tiler",
+        "operationId": "do_change_tiler_pipeline__uuid__set_tiler__index__post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          },
+          {
+            "required": true,
+            "schema": { "title": "Index", "type": "integer" },
+            "name": "index",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/{uuid}/reset_analytics": {
+      "post": {
+        "tags": ["Pipelines"],
+        "summary": "Reset Analytics Counter",
+        "description": "Reset the analytics counter of the specified pipeline.\n\nThe pipeline UUID must be specified in the path.\n\nIf the pipeline is not found, a 404 error is returned.\nIf the pipeline is not running, a 404 error is returned.\nIf the pipeline does not have analytics settings, a 422 error is returned.",
+        "operationId": "reset_analytics_counter_pipeline__uuid__reset_analytics_post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/{uuid}/hls/{segment}": {
+      "get": {
+        "tags": ["Pipelines"],
+        "summary": "Serve Hls Segment",
+        "operationId": "serve_hls_segment_pipeline__uuid__hls__segment__get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          },
+          {
+            "required": true,
+            "schema": { "title": "Segment", "type": "string" },
+            "name": "segment",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pipeline/{uuid}/hls": {
+      "get": {
+        "tags": ["Pipelines"],
+        "summary": "Serve Hls Stream",
+        "operationId": "serve_hls_stream_pipeline__uuid__hls_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Uuid", "type": "string" },
+            "name": "uuid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/ms3/log-level": {
+      "get": {
+        "tags": ["Settings"],
+        "summary": "Get device global log level",
+        "description": "Retrieve the current global log level setting for the device.\nIf no log level is set in the database, raise an error, as the \nlog level should be defined during startup lifespan.\nIf the request is successfully processed, it returns the current \nglobal log level set in the database.",
+        "operationId": "get_global_log_level_device_ms3_log_level_get",
+        "responses": {
+          "200": {
+            "description": "Device global log level",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceGlobalLogLevelResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3401** Not Found.\n    The log level stored in the database was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "**E3402** Unprocessable Entity.\n    The log level stored in the database is incorrect.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Settings"],
+        "summary": "Set device global log level",
+        "description": "Sets the global log level for the current device \nat the given log level.\nIf the request is successfully processed, it returns the \nnewly defined global log level.",
+        "operationId": "set_global_log_level_device_ms3_log_level_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetDeviceGlobalLogLevelBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Device global log_level",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceGlobalLogLevelResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "**E3401** Not Found.\n    The log level stored in the database was not found.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "**E3402** Unprocessable Entity.\n    The log level stored in the database is incorrect.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/global/license": {
+      "get": {
+        "tags": ["Settings"],
+        "summary": "Get device license",
+        "description": "Retrieve the license information from the MS2 server.",
+        "operationId": "get_license_from_ms2_global_license_get",
+        "responses": {
+          "200": {
+            "description": "Device license",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeviceLicense" }
+              }
+            }
+          },
+          "500": {
+            "description": "**E3404** Internal Server Error.\n    The license could not be retrieved from MS2 because it \n    returned an error.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "502": {
+            "description": "**E3406** Bad Gateway.\n    The MS2 server is unreachable.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/global/stack-mode": {
+      "get": {
+        "tags": ["Settings"],
+        "summary": "Get device stack mode",
+        "description": "Retrieve the current stack mode setting for the device.\nIf no stack mode is set in the database, raise an error, as the \nstack mode should be defined during startup lifespan.\nIf the request is successfully processed, it returns the current \nstack mode set in the database.",
+        "operationId": "get_stack_mode_global_stack_mode_get",
+        "responses": {
+          "200": {
+            "description": "Device license",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeviceStackMode" }
+              }
+            }
+          },
+          "500": {
+            "description": "**E3404** Internal Server Error.\n    The license could not be retrieved from MS2 because it \n    returned an error.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "502": {
+            "description": "**E3406** Bad Gateway.\n    The MS2 server is unreachable.\n    ",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/qa": {
+      "get": {
+        "tags": ["QA"],
+        "summary": "Check if the QA test is running",
+        "description": "Check if the QA test is running.\n\nIt returns true if the QA test is running, otherwise false.",
+        "operationId": "get_qa_status_qa_get",
+        "responses": {
+          "200": {
+            "description": "QA test status",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/QAStatusResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": ["General"],
+        "summary": "Get Prometheus metrics",
+        "description": "Retrieve the current Prometheus metrics for the system.\nThis endpoint provides various system metrics in Prometheus format.\nMetrics include custom application metrics like GStreamer pipeline\nperformance, as well as default system metrics collected by Prometheus.\n\nMetrics are returned in plain text format, suitable for scraping by\nPrometheus servers.\n\nSuccessful requests return a plain text response with the latest\nmetric values.",
+        "operationId": "get_metrics_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Current Prometheus metrics in text format",
+            "content": { "application/json": { "schema": {} } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AIProcessorPGIELabelsResponse": {
+        "title": "AIProcessorPGIELabelsResponse",
+        "required": ["labels"],
+        "type": "object",
+        "properties": {
+          "labels": {
+            "title": "Labels",
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      },
+      "AiProcessor": {
+        "title": "AiProcessor",
+        "required": [
+          "unique_id",
+          "name",
+          "version",
+          "hardware_target",
+          "description",
+          "vendor",
+          "license",
+          "user_manual",
+          "primary_processor"
+        ],
+        "type": "object",
+        "properties": {
+          "pk": { "title": "Pk", "type": "string" },
+          "unique_id": { "title": "UUID of the AiProcessor", "type": "string" },
+          "name": {
+            "title": "Unique name of the AiProcessor",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version of the AiProcessor",
+            "type": "string"
+          },
+          "hardware_target": {
+            "title": "Hardware Target",
+            "anyOf": [
+              { "type": "string" },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          },
+          "description": {
+            "title": "Description of the AiProcessor",
+            "type": "string"
+          },
+          "creation_datetime": {
+            "title": "Creation Datetime",
+            "type": "string",
+            "format": "date-time",
+            "default": "2025-11-21T15:15:38.130295"
+          },
+          "vendor": { "$ref": "#/components/schemas/AiVendor" },
+          "license": { "title": "Type of license", "type": "string" },
+          "maximum_input_streams": {
+            "title": "Number of input media that can be connected",
+            "type": "integer",
+            "default": 1
+          },
+          "user_manual": {
+            "title": "URL to access the user manual",
+            "type": "string"
+          },
+          "primary_processor": { "$ref": "#/components/schemas/NvInferServer" },
+          "secondary_processors": {
+            "title": "Secondary Processors",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/NvInferServer" }
+          },
+          "tracker_engine": { "$ref": "#/components/schemas/NvTracker" },
+          "analytic_plugins": {
+            "title": "List of supported analytic plugins",
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AnalyticsPluginOptionSettings"
+            }
+          },
+          "callback_options": {
+            "title": "Callback option definitions for this AIP",
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CallbackOptionConfig"
+            },
+            "default": {}
+          }
+        },
+        "description": "Assembly of primary, secondary, tracker and nvanalytics gstreamer plugins to process the inference data\n# ai_primary -> nvtracker -> ai_secondary\n# TODO check the *_engine are instanciated first before linking them. Same for the secondary inference models"
+      },
+      "AiProcessorCallbackOptionValidationResponse": {
+        "title": "AiProcessorCallbackOptionValidationResponse",
+        "required": ["success"],
+        "type": "object",
+        "properties": { "success": { "title": "Success", "type": "boolean" } }
+      },
+      "AiProcessorDeletionResponse": {
+        "title": "AiProcessorDeletionResponse",
+        "required": ["message", "success"],
+        "type": "object",
+        "properties": {
+          "message": { "title": "Message", "type": "string" },
+          "success": { "title": "Success", "type": "boolean" }
+        }
+      },
+      "AiProcessorProxySetup": {
+        "title": "AiProcessorProxySetup",
+        "type": "object",
+        "properties": {
+          "uuid": { "title": "Uuid", "type": "string" },
+          "inference_drop": {
+            "title": "Inference Drop",
+            "maximum": 32.0,
+            "minimum": 0.0,
+            "type": "integer",
+            "default": 0
+          },
+          "batch_size": {
+            "title": "Batch Size",
+            "maximum": 1024.0,
+            "minimum": 1.0,
+            "type": "integer",
+            "default": 1,
+            "deprecated": true
+          },
+          "merge_interval": {
+            "title": "Merge Interval",
+            "maximum": 60000.0,
+            "minimum": 0.0,
+            "type": "integer",
+            "default": 1000
+          },
+          "push_interval": {
+            "title": "Push Interval",
+            "maximum": 60000.0,
+            "minimum": 0.0,
+            "type": "integer",
+            "default": 5000
+          },
+          "cache_ttl": {
+            "title": "Cache Ttl",
+            "minimum": 1.0,
+            "type": "integer",
+            "default": 30
+          },
+          "callback_options": { "title": "Callback Options", "type": "object" }
+        }
+      },
+      "AiProcessorRegistrationResultResponse": {
+        "title": "AiProcessorRegistrationResultResponse",
+        "required": ["message"],
+        "type": "object",
+        "properties": { "message": { "title": "Message", "type": "string" } }
+      },
+      "AiProcessorRegistrationStatusResponse": {
+        "title": "AiProcessorRegistrationStatusResponse",
+        "required": ["unique_id"],
+        "type": "object",
+        "properties": {
+          "unique_id": { "title": "Unique Id", "type": "string" },
+          "registration_status": {
+            "title": "Registration Status",
+            "type": "string",
+            "default": "unknown"
+          },
+          "primary_processor": {
+            "$ref": "#/components/schemas/TritonRegistrationStatus"
+          },
+          "secondary_processors": {
+            "title": "Secondary Processors",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TritonRegistrationStatus"
+            },
+            "default": []
+          },
+          "assigned_pipelines": {
+            "title": "Assigned Pipelines",
+            "type": "object",
+            "additionalProperties": { "type": "string" },
+            "default": {}
+          }
+        }
+      },
+      "AiProcessorSetup": {
+        "title": "AiProcessorSetup",
+        "type": "object",
+        "properties": {
+          "ai_processor": { "$ref": "#/components/schemas/AiProcessor" },
+          "config": { "$ref": "#/components/schemas/AiProcessorProxySetup" }
+        }
+      },
+      "AiVendor": {
+        "title": "AiVendor",
+        "required": ["name", "website"],
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string" },
+          "website": { "title": "Website", "type": "string" }
+        },
+        "description": "Vendor information"
+      },
+      "AnalyticDirectionDetectionSettings": {
+        "title": "AnalyticDirectionDetectionSettings",
+        "required": ["direction"],
+        "type": "object",
+        "properties": {
+          "class_id": {
+            "title": "Class Id",
+            "type": "array",
+            "items": { "type": "integer" }
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "object",
+            "additionalProperties": {
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array",
+              "items": [
+                { "$ref": "#/components/schemas/Coordinate" },
+                { "$ref": "#/components/schemas/Coordinate" }
+              ]
+            }
+          },
+          "enable": { "title": "Enable", "type": "boolean", "default": true }
+        }
+      },
+      "AnalyticInputSettings": {
+        "title": "AnalyticInputSettings",
+        "type": "object",
+        "properties": {
+          "roi_filtering": {
+            "$ref": "#/components/schemas/AnalyticRoiFilteringSettings"
+          },
+          "overcrowding": {
+            "$ref": "#/components/schemas/AnalyticOvercrowdingSettings"
+          },
+          "direction_detection": {
+            "$ref": "#/components/schemas/AnalyticDirectionDetectionSettings"
+          },
+          "line_crossing": {
+            "$ref": "#/components/schemas/AnalyticLineCrossingSettings"
+          }
+        }
+      },
+      "AnalyticInputSetup": {
+        "title": "AnalyticInputSetup",
+        "type": "object",
+        "properties": {
+          "roi_filtering": {
+            "$ref": "#/components/schemas/AnalyticRoiFilteringSettings"
+          },
+          "overcrowding": {
+            "$ref": "#/components/schemas/AnalyticOvercrowdingSettings"
+          },
+          "direction_detection": {
+            "$ref": "#/components/schemas/AnalyticDirectionDetectionSettings"
+          },
+          "line_crossing": {
+            "$ref": "#/components/schemas/AnalyticLineCrossingSettings"
+          }
+        }
+      },
+      "AnalyticLineCrossingSettings": {
+        "title": "AnalyticLineCrossingSettings",
+        "required": ["line_crossing"],
+        "type": "object",
+        "properties": {
+          "class_id": {
+            "title": "Class Id",
+            "type": "array",
+            "items": { "type": "integer" }
+          },
+          "line_crossing": {
+            "title": "Line Crossing",
+            "type": "object",
+            "additionalProperties": {
+              "maxItems": 4,
+              "minItems": 4,
+              "type": "array",
+              "items": [
+                { "$ref": "#/components/schemas/Coordinate" },
+                { "$ref": "#/components/schemas/Coordinate" },
+                { "$ref": "#/components/schemas/Coordinate" },
+                { "$ref": "#/components/schemas/Coordinate" }
+              ]
+            }
+          },
+          "extended": {
+            "title": "Extended",
+            "type": "boolean",
+            "default": false
+          },
+          "mode": {
+            "title": "Mode",
+            "enum": ["loose", "balanced", "strict"],
+            "type": "string",
+            "default": "balanced"
+          },
+          "enable": { "title": "Enable", "type": "boolean", "default": true }
+        }
+      },
+      "AnalyticOvercrowdingSettings": {
+        "title": "AnalyticOvercrowdingSettings",
+        "required": ["roi"],
+        "type": "object",
+        "properties": {
+          "class_id": {
+            "title": "Class Id",
+            "type": "array",
+            "items": { "type": "integer" }
+          },
+          "roi": {
+            "title": "Roi",
+            "type": "object",
+            "additionalProperties": {
+              "minItems": 3,
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/Coordinate" }
+            }
+          },
+          "object_threshold": {
+            "title": "Object Threshold",
+            "minimum": 0.0,
+            "type": "integer",
+            "default": 0
+          },
+          "enable": { "title": "Enable", "type": "boolean", "default": true }
+        }
+      },
+      "AnalyticRoiFilteringSettings": {
+        "title": "AnalyticRoiFilteringSettings",
+        "required": ["roi"],
+        "type": "object",
+        "properties": {
+          "class_id": {
+            "title": "Class Id",
+            "type": "array",
+            "items": { "type": "integer" }
+          },
+          "roi": {
+            "title": "Roi",
+            "type": "object",
+            "additionalProperties": {
+              "minItems": 3,
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/Coordinate" }
+            }
+          },
+          "inverse_roi": {
+            "title": "Inverse Roi",
+            "type": "boolean",
+            "default": false
+          },
+          "enable": { "title": "Enable", "type": "boolean", "default": true }
+        }
+      },
+      "AnalyticsPluginOptionSettings": {
+        "title": "AnalyticsPluginOptionSettings",
+        "type": "object",
+        "properties": {
+          "custom": {
+            "title": "Custom plugin",
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "description": "Analytics plugin options"
+      },
+      "Body_create_media_media_post": {
+        "title": "Body_create_media_media_post",
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string" },
+          "description": { "title": "Description", "type": "string" },
+          "tags": { "title": "Tags", "type": "string" },
+          "coordinates": { "title": "Coordinates", "type": "string" },
+          "proxy_setup": {
+            "title": "Proxy Setup",
+            "type": "string",
+            "default": "{}"
+          },
+          "external_setup": { "title": "External Setup", "type": "string" },
+          "media_file": {
+            "title": "Media File",
+            "type": "string",
+            "format": "binary"
+          }
+        }
+      },
+      "Body_create_new_pipeline_pipeline_post": {
+        "title": "Body_create_new_pipeline_pipeline_post",
+        "required": ["pipeline"],
+        "type": "object",
+        "properties": {
+          "pipeline": { "$ref": "#/components/schemas/PipelineSetup" }
+        }
+      },
+      "Body_update_callback_options_pipeline__uuid__options_put": {
+        "title": "Body_update_callback_options_pipeline__uuid__options_put",
+        "required": ["options"],
+        "type": "object",
+        "properties": { "options": { "title": "Options", "type": "object" } }
+      },
+      "Body_update_media_media__uuid__put": {
+        "title": "Body_update_media_media__uuid__put",
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string" },
+          "description": { "title": "Description", "type": "string" },
+          "tags": { "title": "Tags", "type": "string" },
+          "coordinates": { "title": "Coordinates", "type": "string" },
+          "proxy_setup": {
+            "title": "Proxy Setup",
+            "type": "string",
+            "default": "{}"
+          },
+          "external_setup": { "title": "External Setup", "type": "string" },
+          "media_file": {
+            "title": "Media File",
+            "type": "string",
+            "format": "binary"
+          }
+        }
+      },
+      "Body_update_pipeline_pipeline__uuid__put": {
+        "title": "Body_update_pipeline_pipeline__uuid__put",
+        "required": ["pipeline"],
+        "type": "object",
+        "properties": {
+          "pipeline": { "$ref": "#/components/schemas/PipelineSetup" }
+        }
+      },
+      "Body_upload_aiprocessor_aiprocessor_upload_post": {
+        "title": "Body_upload_aiprocessor_aiprocessor_upload_post",
+        "required": ["file"],
+        "type": "object",
+        "properties": {
+          "file": { "title": "File", "type": "string", "format": "binary" }
+        }
+      },
+      "CallbackOptionConfig": {
+        "title": "CallbackOptionConfig",
+        "required": ["value_type"],
+        "type": "object",
+        "properties": {
+          "value_type": {
+            "title": "Value Type",
+            "enum": ["float", "int", "bool", "str", "literal"],
+            "type": "string"
+          },
+          "default": { "title": "Default" },
+          "min_value": {
+            "title": "Min Value",
+            "anyOf": [{ "type": "number" }, { "type": "integer" }]
+          },
+          "max_value": {
+            "title": "Max Value",
+            "anyOf": [{ "type": "number" }, { "type": "integer" }]
+          },
+          "allowed_values": {
+            "title": "Allowed Values",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "description": { "title": "Description", "type": "string" }
+        },
+        "description": "Callback option configuration"
+      },
+      "Coordinate": {
+        "title": "Coordinate",
+        "required": ["x", "y"],
+        "type": "object",
+        "properties": {
+          "x": { "title": "X", "minimum": 0.0, "type": "integer" },
+          "y": { "title": "Y", "minimum": 0.0, "type": "integer" }
+        }
+      },
+      "DeviceGlobalLogLevelResponse": {
+        "title": "DeviceGlobalLogLevelResponse",
+        "required": ["log_level"],
+        "type": "object",
+        "properties": {
+          "log_level": { "$ref": "#/components/schemas/LogLevelEnum" }
+        }
+      },
+      "DeviceLicense": {
+        "title": "DeviceLicense",
+        "required": [
+          "uuid",
+          "device_uuid",
+          "schema_version",
+          "type",
+          "vendor",
+          "expiration_date",
+          "max_pipelines",
+          "allowed_processors"
+        ],
+        "type": "object",
+        "properties": {
+          "uuid": { "title": "Uuid", "type": "string" },
+          "device_uuid": { "title": "Device Uuid", "type": "string" },
+          "schema_version": { "title": "Schema Version", "type": "string" },
+          "type": { "title": "Type", "type": "string" },
+          "vendor": { "title": "Vendor", "type": "string" },
+          "expiration_date": {
+            "title": "Expiration Date",
+            "type": "string",
+            "format": "date"
+          },
+          "max_pipelines": {
+            "title": "Max Pipelines",
+            "minimum": 0.0,
+            "type": "integer"
+          },
+          "allowed_processors": {
+            "title": "Allowed Processors",
+            "minItems": 1,
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "DeviceStackMode": {
+        "title": "DeviceStackMode",
+        "type": "object",
+        "properties": {
+          "mode": {
+            "title": "Mode",
+            "enum": ["prod", "cp", "dev", "qa"],
+            "type": "string"
+          }
+        },
+        "description": "Device stack mode information.\n\n! Don't trust the value of the mode attribute directly, since\n! qa mode is considered as a production mode. Use the methods\n! provided by this class to check the stack mode.\n\nThere are four stack modes: production, CP, development, and QA.\nSince QA should be run in a production-like environment, the QA mode\nis considered as a production mode."
+      },
+      "ErrorResponse": {
+        "title": "ErrorResponse",
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "title": "Timestamp",
+            "type": "string",
+            "format": "date-time",
+            "default": "2025-11-21T15:15:37.910824+09:00"
+          },
+          "error_code": {
+            "title": "Error Code",
+            "type": "string",
+            "default": "Exxxx"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string",
+            "default": "Simple error message for client"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string",
+            "default": "Detailed error description for client."
+          }
+        }
+      },
+      "FileMediaProxySettings": {
+        "title": "FileMediaProxySettings",
+        "required": ["file_path"],
+        "type": "object",
+        "properties": {
+          "file_path": { "title": "File Path", "type": "string" }
+        },
+        "additionalProperties": false,
+        "description": "File settings\n- file_path: path on the file system where the file is stored"
+      },
+      "HLSOutputSinkProxySettings": {
+        "title": "HLSOutputSinkProxySettings",
+        "type": "object",
+        "properties": {
+          "active": {
+            "title": "Enable or disable the output sink",
+            "type": "boolean",
+            "default": true
+          },
+          "max_files": {
+            "title": "Maximum number of segments stored on the disk",
+            "type": "integer",
+            "default": 50
+          },
+          "playlist_len": {
+            "title": "Number of segments in the playlist",
+            "type": "integer",
+            "default": 12
+          },
+          "target_duration": {
+            "title": "Number of seconds for each segment",
+            "type": "integer",
+            "default": 1
+          },
+          "bitrate": {
+            "title": "Bitrate for the h264 encoder",
+            "type": "integer",
+            "default": 4000000
+          },
+          "control_rate": {
+            "title": "Set control rate for v4l2 encode, (0): variable_bitrate",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "type": "integer",
+            "default": 1
+          },
+          "iframeinterval": {
+            "title": "Encoding Intra Frame occurance frequency",
+            "maximum": 4294967295.0,
+            "minimum": 0.0,
+            "type": "integer",
+            "default": 5
+          }
+        },
+        "additionalProperties": false,
+        "description": "HTTP live streaming output"
+      },
+      "HLSOutputSinkProxySetup": {
+        "title": "HLSOutputSinkProxySetup",
+        "type": "object",
+        "properties": {
+          "active": {
+            "title": "Enable or disable the output sink",
+            "type": "boolean",
+            "default": true
+          },
+          "max_files": {
+            "title": "Maximum number of segments stored on the disk",
+            "type": "integer",
+            "default": 50
+          },
+          "playlist_len": {
+            "title": "Number of segments in the playlist",
+            "type": "integer",
+            "default": 12
+          },
+          "target_duration": {
+            "title": "Number of seconds for each segment",
+            "type": "integer",
+            "default": 1
+          },
+          "bitrate": {
+            "title": "Bitrate for the h264 encoder",
+            "type": "integer",
+            "default": 4000000
+          },
+          "control_rate": {
+            "title": "Set control rate for v4l2 encode, (0): variable_bitrate",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "type": "integer",
+            "default": 1
+          },
+          "iframeinterval": {
+            "title": "Encoding Intra Frame occurance frequency",
+            "maximum": 4294967295.0,
+            "minimum": 0.0,
+            "type": "integer",
+            "default": 5
+          }
+        },
+        "additionalProperties": false,
+        "description": "HTTP live streaming output"
+      },
+      "HTTPValidationError": {
+        "title": "HTTPValidationError",
+        "type": "object",
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ValidationError" }
+          }
+        }
+      },
+      "InputSetup": {
+        "title": "InputSetup",
+        "required": ["media_uuid"],
+        "type": "object",
+        "properties": {
+          "media_uuid": { "title": "Media Uuid", "type": "string" },
+          "media_setup": {
+            "title": "Media Setup",
+            "allOf": [{ "$ref": "#/components/schemas/InputSourceSetup" }],
+            "default": {
+              "mirror": false,
+              "frame_dropping": 0,
+              "latency": 0,
+              "loop": false
+            }
+          },
+          "analytic_setup": {
+            "$ref": "#/components/schemas/AnalyticInputSetup"
+          }
+        }
+      },
+      "InputSource": {
+        "title": "InputSource",
+        "required": ["input_id", "media", "media_settings"],
+        "type": "object",
+        "properties": {
+          "input_id": { "title": "Input Id", "type": "integer" },
+          "media": { "$ref": "#/components/schemas/Media" },
+          "media_settings": {
+            "$ref": "#/components/schemas/InputSourceSettings"
+          },
+          "analytic_settings": {
+            "title": "ROI, Line cross count, etc..",
+            "allOf": [{ "$ref": "#/components/schemas/AnalyticInputSettings" }]
+          }
+        },
+        "description": "Input source for the AI processor"
+      },
+      "InputSourceSettings": {
+        "title": "InputSourceSettings",
+        "type": "object",
+        "properties": {
+          "mirror": {
+            "title": "Mirror the video source",
+            "type": "boolean",
+            "default": false
+          },
+          "frame_dropping": {
+            "title": "Frame Dropping",
+            "maximum": 30.0,
+            "minimum": 0.0,
+            "type": "integer",
+            "default": 0,
+            "deprecated": true
+          },
+          "framerate_limit": {
+            "title": "Limit the framerate of the video source. This won't increase the framerate if the source is slower than the limit",
+            "minimum": 1.0,
+            "type": "integer"
+          },
+          "latency": {
+            "title": "Only applicable for RTSP streams",
+            "type": "integer",
+            "default": 0
+          },
+          "loop": {
+            "title": "Only applicable for video files",
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "InputSourceSetup": {
+        "title": "InputSourceSetup",
+        "type": "object",
+        "properties": {
+          "mirror": {
+            "title": "Mirror the video source",
+            "type": "boolean",
+            "default": false
+          },
+          "frame_dropping": {
+            "title": "Frame Dropping",
+            "maximum": 30.0,
+            "minimum": 0.0,
+            "type": "integer",
+            "default": 0,
+            "deprecated": true
+          },
+          "framerate_limit": {
+            "title": "Limit the framerate of the video source. This won't increase the framerate if the source is slower than the limit",
+            "minimum": 1.0,
+            "type": "integer"
+          },
+          "latency": {
+            "title": "Only applicable for RTSP streams",
+            "type": "integer",
+            "default": 0
+          },
+          "loop": {
+            "title": "Only applicable for video files",
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "LogLevelEnum": {
+        "title": "LogLevelEnum",
+        "enum": ["debug", "info", "warning", "error", "critical"],
+        "type": "string",
+        "description": "An enumeration."
+      },
+      "Media": {
+        "title": "Media",
+        "required": ["name", "type", "proxy_settings"],
+        "type": "object",
+        "properties": {
+          "pk": { "title": "Pk", "type": "string" },
+          "name": {
+            "title": "Name",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string"
+          },
+          "creation_datetime": {
+            "title": "Creation Datetime",
+            "type": "string",
+            "format": "date-time",
+            "default": "2025-11-21T15:15:38.041724"
+          },
+          "type": { "$ref": "#/components/schemas/MediaType" },
+          "coordinates": { "$ref": "#/components/schemas/MediaCoordinate" },
+          "proxy_settings": {
+            "title": "Proxy Settings",
+            "anyOf": [
+              { "$ref": "#/components/schemas/RTSPMediaProxySettings" },
+              { "$ref": "#/components/schemas/USBMediaProxySettings" },
+              { "$ref": "#/components/schemas/FileMediaProxySettings" }
+            ]
+          },
+          "external_settings": {
+            "$ref": "#/components/schemas/MediaExternalSettings"
+          },
+          "tags": { "title": "Tags", "type": "object", "default": {} }
+        }
+      },
+      "MediaCoordinate": {
+        "title": "MediaCoordinate",
+        "type": "object",
+        "properties": {
+          "longitude": {
+            "title": "Longitude",
+            "type": "number",
+            "default": 0.0
+          },
+          "latitude": { "title": "Latitude", "type": "number", "default": 0.0 }
+        },
+        "additionalProperties": false,
+        "description": "Coordinate Information\n- longitude: [-180 .. 180]\n- latitude: [-90 .. 90]"
+      },
+      "MediaExternalSettings": {
+        "title": "MediaExternalSettings",
+        "type": "object",
+        "properties": {
+          "admin_url": { "title": "Admin Url", "type": "string" },
+          "login": { "title": "Login", "type": "string" },
+          "password": { "title": "Password", "type": "string" },
+          "user_manual": {
+            "title": "User Manual",
+            "maxLength": 65536,
+            "minLength": 1,
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaPreviewUpdateResponse": {
+        "title": "MediaPreviewUpdateResponse",
+        "required": ["success"],
+        "type": "object",
+        "properties": { "success": { "title": "Success", "type": "boolean" } }
+      },
+      "MediaStatusResponse": {
+        "title": "MediaStatusResponse",
+        "required": ["playable", "reason", "assigned_pipelines"],
+        "type": "object",
+        "properties": {
+          "playable": { "title": "Playable", "type": "boolean" },
+          "reason": { "title": "Reason", "type": "string" },
+          "assigned_pipelines": {
+            "title": "Assigned Pipelines",
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        }
+      },
+      "MediaType": {
+        "title": "MediaType",
+        "enum": ["file", "rtsp", "usb"],
+        "type": "string",
+        "description": "An enumeration."
+      },
+      "NodeRedOutputDataProxySettings": {
+        "title": "NodeRedOutputDataProxySettings",
+        "type": "object",
+        "properties": {
+          "active": {
+            "title": "Enable or disable the metadata output",
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Node-RED metadata output"
+      },
+      "NodeRedOutputDataProxySetup": {
+        "title": "NodeRedOutputDataProxySetup",
+        "type": "object",
+        "properties": {
+          "active": {
+            "title": "Enable or disable the metadata output",
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Node-RED metadata output"
+      },
+      "NvInferServer": {
+        "title": "NvInferServer",
+        "required": ["name", "description", "model", "config_plan"],
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string" },
+          "description": { "title": "Description", "type": "string" },
+          "model": { "title": "Model", "type": "string" },
+          "classes": {
+            "title": "Classes",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "config_plan": { "title": "Config Plan", "type": "string" },
+          "batch_size": {
+            "title": "Batch Size",
+            "maximum": 1024.0,
+            "minimum": 1.0,
+            "type": "integer",
+            "default": 1
+          }
+        },
+        "description": "Create a primary detector instance using NVIDIA DeepStreamSDK TensorRT Inference Server plugin"
+      },
+      "NvTracker": {
+        "title": "NvTracker",
+        "required": ["name", "description", "model", "lib_path", "config_plan"],
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string" },
+          "description": { "title": "Description", "type": "string" },
+          "model": { "title": "Model", "type": "string" },
+          "lib_path": { "title": "Lib Path", "type": "string" },
+          "config_plan": { "title": "Config Plan", "type": "string" },
+          "tracker_width": {
+            "title": "Tracker Width",
+            "type": "integer",
+            "default": -1
+          },
+          "tracker_height": {
+            "title": "Tracker Height",
+            "type": "integer",
+            "default": -1
+          }
+        },
+        "description": "NVIDIA GStreamer nvtracker Plugin"
+      },
+      "OSDProxySettings": {
+        "title": "OSDProxySettings",
+        "type": "object",
+        "properties": {
+          "active": { "title": "Active", "type": "boolean", "default": true },
+          "clock": { "title": "Clock", "type": "boolean", "default": true },
+          "text": { "title": "Text", "type": "boolean", "default": true },
+          "bbox": { "title": "Bbox", "type": "boolean", "default": true },
+          "mask": { "title": "Mask", "type": "boolean", "default": true },
+          "analytics": {
+            "title": "Analytics",
+            "enum": [0, 1, 2],
+            "type": "integer",
+            "default": 2
+          }
+        }
+      },
+      "OSDProxySetup": {
+        "title": "OSDProxySetup",
+        "type": "object",
+        "properties": {
+          "active": { "title": "Active", "type": "boolean", "default": true },
+          "clock": { "title": "Clock", "type": "boolean", "default": true },
+          "text": { "title": "Text", "type": "boolean", "default": true },
+          "bbox": { "title": "Bbox", "type": "boolean", "default": true },
+          "mask": { "title": "Mask", "type": "boolean", "default": true },
+          "analytics": {
+            "title": "Analytics",
+            "enum": [0, 1, 2],
+            "type": "integer",
+            "default": 2
+          }
+        }
+      },
+      "PipelineResultResponse": {
+        "title": "PipelineResultResponse",
+        "required": ["message"],
+        "type": "object",
+        "properties": { "message": { "title": "Message", "type": "string" } }
+      },
+      "PipelineSetup": {
+        "title": "PipelineSetup",
+        "required": ["name"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string"
+          },
+          "draft": { "title": "Draft", "type": "boolean", "default": false },
+          "auto_reload": {
+            "title": "Auto Reload",
+            "type": "boolean",
+            "default": false
+          },
+          "inputs": {
+            "title": "Inputs",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/InputSetup" }
+          },
+          "ai_processor_setup": {
+            "$ref": "#/components/schemas/AiProcessorProxySetup"
+          },
+          "tiler_setup": {
+            "title": "Tiler Setup",
+            "allOf": [{ "$ref": "#/components/schemas/TilerProxySetup" }],
+            "default": { "width": 1280, "height": 720 }
+          },
+          "osd_setup": {
+            "title": "Osd Setup",
+            "allOf": [{ "$ref": "#/components/schemas/OSDProxySetup" }],
+            "default": {
+              "active": true,
+              "clock": true,
+              "text": true,
+              "bbox": true,
+              "mask": true,
+              "analytics": 2
+            }
+          },
+          "nodered_output_data_setup": {
+            "title": "Nodered Output Data Setup",
+            "allOf": [
+              { "$ref": "#/components/schemas/NodeRedOutputDataProxySetup" }
+            ],
+            "default": { "active": true }
+          },
+          "websocket_output_data_setup": {
+            "title": "Websocket Output Data Setup",
+            "allOf": [
+              { "$ref": "#/components/schemas/WebSocketOutputDataProxySetup" }
+            ],
+            "default": { "active": true }
+          },
+          "rtsp_output_sink_setup": {
+            "title": "Rtsp Output Sink Setup",
+            "allOf": [
+              { "$ref": "#/components/schemas/RTSPOutputSinkProxySetup" }
+            ],
+            "default": {
+              "active": false,
+              "rtsp_port_number": 5400,
+              "login": "admin",
+              "password": "password"
+            }
+          },
+          "hls_output_sink_setup": {
+            "title": "Hls Output Sink Setup",
+            "allOf": [
+              { "$ref": "#/components/schemas/HLSOutputSinkProxySetup" }
+            ],
+            "default": {
+              "active": true,
+              "max_files": 50,
+              "playlist_len": 12,
+              "target_duration": 1,
+              "bitrate": 4000000,
+              "control_rate": 1,
+              "iframeinterval": 5
+            }
+          }
+        }
+      },
+      "QAStatusResponse": {
+        "title": "QAStatusResponse",
+        "required": ["status"],
+        "type": "object",
+        "properties": { "status": { "title": "Status", "type": "boolean" } }
+      },
+      "RTSPMediaProxySettings": {
+        "title": "RTSPMediaProxySettings",
+        "required": ["uri"],
+        "type": "object",
+        "properties": {
+          "uri": {
+            "title": "Uri",
+            "maxLength": 65536,
+            "minLength": 1,
+            "type": "string",
+            "format": "uri"
+          },
+          "login": { "title": "Login", "type": "string" },
+          "password": { "title": "Password", "type": "string" }
+        },
+        "additionalProperties": false,
+        "description": "RTSP settings\n- uri: DNS or IPv4\n- login: RTSP username\n- password: RTSP password"
+      },
+      "RTSPOutputSinkProxySettings": {
+        "title": "RTSPOutputSinkProxySettings",
+        "type": "object",
+        "properties": {
+          "active": {
+            "title": "Enable or disable the output sink",
+            "type": "boolean",
+            "default": false
+          },
+          "rtsp_port_number": {
+            "title": "Set the RTSP server port",
+            "maximum": 5450.0,
+            "minimum": 5400.0,
+            "type": "integer",
+            "default": 5400
+          },
+          "login": {
+            "title": "The RTSP server username",
+            "type": "string",
+            "default": "admin"
+          },
+          "password": {
+            "title": "The RTSP server password",
+            "type": "string",
+            "default": "password"
+          }
+        },
+        "additionalProperties": false,
+        "description": "RTSP server output with authentication"
+      },
+      "RTSPOutputSinkProxySetup": {
+        "title": "RTSPOutputSinkProxySetup",
+        "type": "object",
+        "properties": {
+          "active": {
+            "title": "Enable or disable the output sink",
+            "type": "boolean",
+            "default": false
+          },
+          "rtsp_port_number": {
+            "title": "Set the RTSP server port",
+            "maximum": 5450.0,
+            "minimum": 5400.0,
+            "type": "integer",
+            "default": 5400
+          },
+          "login": {
+            "title": "The RTSP server username",
+            "type": "string",
+            "default": "admin"
+          },
+          "password": {
+            "title": "The RTSP server password",
+            "type": "string",
+            "default": "password"
+          }
+        },
+        "additionalProperties": false,
+        "description": "RTSP server output with authentication"
+      },
+      "SafeAiProcessorResponse": {
+        "title": "SafeAiProcessorResponse",
+        "required": [
+          "unique_id",
+          "name",
+          "version",
+          "hardware_target",
+          "description",
+          "vendor",
+          "license",
+          "user_manual",
+          "primary_processor",
+          "primary_processor",
+          "secondary_processors",
+          "tracker_engine"
+        ],
+        "type": "object",
+        "properties": {
+          "pk": { "title": "Pk", "type": "string" },
+          "unique_id": { "title": "UUID of the AiProcessor", "type": "string" },
+          "name": {
+            "title": "Unique name of the AiProcessor",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version of the AiProcessor",
+            "type": "string"
+          },
+          "hardware_target": {
+            "title": "Hardware Target",
+            "anyOf": [
+              { "type": "string" },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          },
+          "description": {
+            "title": "Description of the AiProcessor",
+            "type": "string"
+          },
+          "creation_datetime": {
+            "title": "Creation Datetime",
+            "type": "string",
+            "format": "date-time",
+            "default": "2025-11-21T15:15:38.130295"
+          },
+          "vendor": { "$ref": "#/components/schemas/AiVendor" },
+          "license": { "title": "Type of license", "type": "string" },
+          "maximum_input_streams": {
+            "title": "Number of input media that can be connected",
+            "type": "integer",
+            "default": 1
+          },
+          "user_manual": {
+            "title": "URL to access the user manual",
+            "type": "string"
+          },
+          "primary_processor": {
+            "$ref": "#/components/schemas/SafeNvInferServer"
+          },
+          "secondary_processors": {
+            "title": "Secondary Processors",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SafeNvInferServer" }
+          },
+          "tracker_engine": { "$ref": "#/components/schemas/SafeNvTracker" },
+          "analytic_plugins": {
+            "title": "List of supported analytic plugins",
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AnalyticsPluginOptionSettings"
+            }
+          },
+          "callback_options": {
+            "title": "Callback option definitions for this AIP",
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CallbackOptionConfig"
+            },
+            "default": {}
+          }
+        },
+        "description": "Assembly of primary, secondary, tracker and nvanalytics gstreamer plugins to process the inference data\n# ai_primary -> nvtracker -> ai_secondary\n# TODO check the *_engine are instanciated first before linking them. Same for the secondary inference models"
+      },
+      "SafeAiProcessorSetup": {
+        "title": "SafeAiProcessorSetup",
+        "required": ["ai_processor"],
+        "type": "object",
+        "properties": {
+          "ai_processor": {
+            "$ref": "#/components/schemas/SafeAiProcessorResponse"
+          },
+          "config": { "$ref": "#/components/schemas/AiProcessorProxySetup" }
+        }
+      },
+      "SafeNvInferServer": {
+        "title": "SafeNvInferServer",
+        "required": ["name", "description", "model", "config_plan"],
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string" },
+          "description": { "title": "Description", "type": "string" },
+          "model": { "title": "Model", "type": "string" },
+          "classes": {
+            "title": "Classes",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "config_plan": { "title": "Config Plan", "type": "string" },
+          "batch_size": {
+            "title": "Batch Size",
+            "maximum": 1024.0,
+            "minimum": 1.0,
+            "type": "integer",
+            "default": 1
+          }
+        },
+        "description": "Create a primary detector instance using NVIDIA DeepStreamSDK TensorRT Inference Server plugin"
+      },
+      "SafeNvTracker": {
+        "title": "SafeNvTracker",
+        "required": ["name", "description", "model", "lib_path", "config_plan"],
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string" },
+          "description": { "title": "Description", "type": "string" },
+          "model": { "title": "Model", "type": "string" },
+          "lib_path": { "title": "Lib Path", "type": "string" },
+          "config_plan": { "title": "Config Plan", "type": "string" },
+          "tracker_width": {
+            "title": "Tracker Width",
+            "type": "integer",
+            "default": -1
+          },
+          "tracker_height": {
+            "title": "Tracker Height",
+            "type": "integer",
+            "default": -1
+          }
+        },
+        "description": "NVIDIA GStreamer nvtracker Plugin"
+      },
+      "SafePipelineResponse": {
+        "title": "SafePipelineResponse",
+        "required": ["name", "ai_processor_settings"],
+        "type": "object",
+        "properties": {
+          "pk": { "title": "Pk", "type": "string" },
+          "name": {
+            "title": "Pipeline Name",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string",
+            "default": false
+          },
+          "creation_datetime": {
+            "title": "Creation Datetime",
+            "type": "string",
+            "format": "date-time",
+            "default": "2025-11-21T15:15:38.207270"
+          },
+          "auto_reload": { "title": "Auto Reload", "type": "boolean" },
+          "input_sources": {
+            "title": "Input Sources",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/InputSource" }
+          },
+          "ai_processor_settings": {
+            "$ref": "#/components/schemas/SafeAiProcessorSetup"
+          },
+          "tiler_settings": {
+            "$ref": "#/components/schemas/TilerProxySettings"
+          },
+          "osd_settings": { "$ref": "#/components/schemas/OSDProxySettings" },
+          "nodered_output_data_settings": {
+            "$ref": "#/components/schemas/NodeRedOutputDataProxySettings"
+          },
+          "websocket_output_data_settings": {
+            "$ref": "#/components/schemas/WebSocketOutputDataProxySettings"
+          },
+          "rtsp_output_sink_settings": {
+            "$ref": "#/components/schemas/RTSPOutputSinkProxySettings"
+          },
+          "hls_output_sink_settings": {
+            "$ref": "#/components/schemas/HLSOutputSinkProxySettings"
+          },
+          "draft": { "title": "Draft", "type": "boolean", "default": false }
+        },
+        "description": "Represent a Deepstream pipeline with multi inputs/outputs and inference processing"
+      },
+      "SetDeviceGlobalLogLevelBody": {
+        "title": "SetDeviceGlobalLogLevelBody",
+        "required": ["log_level"],
+        "type": "object",
+        "properties": {
+          "log_level": { "$ref": "#/components/schemas/LogLevelEnum" }
+        }
+      },
+      "SimplifiedComplexPipelineResponse": {
+        "title": "SimplifiedComplexPipelineResponse",
+        "required": ["name"],
+        "type": "object",
+        "properties": {
+          "pk": { "title": "Pk", "type": "string" },
+          "name": {
+            "title": "Pipeline Name",
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string",
+            "default": false
+          },
+          "creation_datetime": {
+            "title": "Creation Datetime",
+            "type": "string",
+            "format": "date-time",
+            "default": "2025-11-21T15:15:38.207270"
+          },
+          "auto_reload": { "title": "Auto Reload", "type": "boolean" },
+          "input_sources": {
+            "title": "Input Sources",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/InputSource" }
+          },
+          "ai_processor_settings": {
+            "$ref": "#/components/schemas/AiProcessorSetup"
+          },
+          "tiler_settings": {
+            "$ref": "#/components/schemas/TilerProxySettings"
+          },
+          "osd_settings": { "$ref": "#/components/schemas/OSDProxySettings" },
+          "nodered_output_data_settings": {
+            "$ref": "#/components/schemas/NodeRedOutputDataProxySettings"
+          },
+          "websocket_output_data_settings": {
+            "$ref": "#/components/schemas/WebSocketOutputDataProxySettings"
+          },
+          "rtsp_output_sink_settings": {
+            "$ref": "#/components/schemas/RTSPOutputSinkProxySettings"
+          },
+          "hls_output_sink_settings": {
+            "$ref": "#/components/schemas/HLSOutputSinkProxySettings"
+          },
+          "draft": { "title": "Draft", "type": "boolean", "default": false }
+        },
+        "description": "Represent a Deepstream pipeline with multi inputs/outputs and inference processing"
+      },
+      "SnapshotListResponse": {
+        "title": "SnapshotListResponse",
+        "required": ["pagination", "pipeline_map", "media_map", "records"],
+        "type": "object",
+        "properties": {
+          "pagination": {
+            "$ref": "#/components/schemas/SnapshotPaginationSummary"
+          },
+          "pipeline_map": {
+            "title": "Pipeline Map",
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          },
+          "media_map": {
+            "title": "Media Map",
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "records": {
+            "title": "Records",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SnapshotRecord" }
+          }
+        }
+      },
+      "SnapshotPaginationSummary": {
+        "title": "SnapshotPaginationSummary",
+        "required": ["page", "size", "max_page", "total"],
+        "type": "object",
+        "properties": {
+          "page": { "title": "Page", "type": "integer" },
+          "size": { "title": "Size", "type": "integer" },
+          "max_page": { "title": "Max Page", "type": "integer" },
+          "total": { "title": "Total", "type": "integer" }
+        }
+      },
+      "SnapshotRecord": {
+        "title": "SnapshotRecord",
+        "required": [
+          "snapshot_uuid",
+          "pipeline_uuid",
+          "media_uuid",
+          "media_name",
+          "timestamp"
+        ],
+        "type": "object",
+        "properties": {
+          "snapshot_uuid": { "title": "Snapshot Uuid", "type": "string" },
+          "pipeline_uuid": { "title": "Pipeline Uuid", "type": "string" },
+          "pipeline_name": { "title": "Pipeline Name", "type": "string" },
+          "media_uuid": { "title": "Media Uuid", "type": "string" },
+          "media_name": {
+            "title": "Media Name",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "timestamp": {
+            "title": "Timestamp",
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TilerProxySettings": {
+        "title": "TilerProxySettings",
+        "type": "object",
+        "properties": {
+          "width": {
+            "title": "Tile View Width",
+            "maximum": 2160.0,
+            "minimum": 320.0,
+            "type": "integer",
+            "default": 1280
+          },
+          "height": {
+            "title": "Tile View Height",
+            "maximum": 1080.0,
+            "minimum": 160.0,
+            "type": "integer",
+            "default": 720
+          }
+        }
+      },
+      "TilerProxySetup": {
+        "title": "TilerProxySetup",
+        "type": "object",
+        "properties": {
+          "width": {
+            "title": "Tile View Width",
+            "maximum": 2160.0,
+            "minimum": 320.0,
+            "type": "integer",
+            "default": 1280
+          },
+          "height": {
+            "title": "Tile View Height",
+            "maximum": 1080.0,
+            "minimum": 160.0,
+            "type": "integer",
+            "default": 720
+          }
+        }
+      },
+      "TritonRegistrationStatus": {
+        "title": "TritonRegistrationStatus",
+        "required": ["name"],
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string" },
+          "state": { "title": "State", "type": "string" },
+          "reason": { "title": "Reason", "type": "string" },
+          "version": { "title": "Version", "type": "string" }
+        }
+      },
+      "USBMediaProxySettings": {
+        "title": "USBMediaProxySettings",
+        "required": ["device_path", "width", "height", "framerate"],
+        "type": "object",
+        "properties": {
+          "device_path": { "title": "Device Path", "type": "string" },
+          "width": { "title": "Width", "type": "integer" },
+          "height": { "title": "Height", "type": "integer" },
+          "framerate": { "title": "Framerate", "type": "string" }
+        },
+        "additionalProperties": false,
+        "description": "USB settings\n- device_path: file descriptor to the USB video camera"
+      },
+      "ValidationError": {
+        "title": "ValidationError",
+        "required": ["loc", "msg", "type"],
+        "type": "object",
+        "properties": {
+          "loc": {
+            "title": "Location",
+            "type": "array",
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] }
+          },
+          "msg": { "title": "Message", "type": "string" },
+          "type": { "title": "Error Type", "type": "string" }
+        }
+      },
+      "WebSocketOutputDataProxySettings": {
+        "title": "WebSocketOutputDataProxySettings",
+        "type": "object",
+        "properties": {
+          "active": {
+            "title": "Enable or disable the metadata output",
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "WebSocket metadata output"
+      },
+      "WebSocketOutputDataProxySetup": {
+        "title": "WebSocketOutputDataProxySetup",
+        "type": "object",
+        "properties": {
+          "active": {
+            "title": "Enable or disable the metadata output",
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "WebSocket metadata output"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "AI Processors",
+      "description": "APIs related to AI processor management."
+    },
+    { "name": "Media", "description": "APIs related to media management." },
+    {
+      "name": "Pipelines",
+      "description": "APIs related to pipeline and snapshot management."
+    },
+    {
+      "name": "Settings",
+      "description": "APIs related to log level and other settings."
+    },
+    { "name": "QA", "description": "APIs related to QA code testing." },
+    { "name": "General", "description": "Other general APIs." }
+  ]
+}

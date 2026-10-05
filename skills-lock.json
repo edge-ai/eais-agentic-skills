@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "aip-builder": {
+      "source": "edge-ai/eais-agentic-skills",
+      "sourceType": "github",
+      "skillPath": "skills/aip-builder/SKILL.md",
+      "computedHash": "d7e90d4a05dee321ab3512bc7376e9c02b4f1921ae507c32a4d11d1c6804c117"
+    },
+    "node-red-dashboard-architect": {
+      "source": "edge-ai/eais-agentic-skills",
+      "sourceType": "github",
+      "skillPath": "skills/node-red-dashboard-architect/SKILL.md",
+      "computedHash": "fad78741e353725d522a120980abd4d2e1d7787ed151a5eed81a1d539fd53e74"
+    },
+    "node-red-flow-architect": {
+      "source": "edge-ai/eais-agentic-skills",
+      "sourceType": "github",
+      "skillPath": "skills/node-red-flow-architect/SKILL.md",
+      "computedHash": "e188cfe799e7b4036605e5bde690f59cc9d5dd4182ca6c1b739b20c70df42e30"
+    }
+  }
+}
