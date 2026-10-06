@@ -61,11 +61,7 @@ redacted logs, and label assumptions explicitly.
 The MCP is **read-only**: it cannot deploy flows, write dashboard source, or build an AIP. Each skill
 carries its own `resources/eais-mcp-usage.md` describing the tools, limits, and fallbacks.
 
-## Installation (authorized users)
-
-The installation commands below are for users authorized in writing by Edgematrix Inc.
-The skills CLI can copy repository contents into an agent's local environment; that
-installation does not grant permission to use or redistribute the materials.
+## Installation
 
 Install with the [skills.sh](https://www.skills.sh/) CLI (recommended):
 
