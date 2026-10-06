@@ -1,0 +1,15 @@
+{
+  "name": "eais-agentic-skills-validation",
+  "private": true,
+  "scripts": {
+    "test": "node --test .github/scripts/tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "jsonata": "2.0.6",
+    "node-red": "4.1.7",
+    "node-red-node-test-helper": "0.3.5"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

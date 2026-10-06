@@ -1,0 +1,33 @@
+name: Validate skills
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Test package validator
+        run: python3 -m unittest discover -s .github/scripts/tests -v
+      - name: Validate bundled skill package
+        run: python3 .github/scripts/validate_skills.py
+      - name: Install example-test dependencies
+        run: |
+          python3 -m venv "${RUNNER_TEMP}/callback-tests"
+          "${RUNNER_TEMP}/callback-tests/bin/python" -m pip install -r .github/scripts/tests/requirements.txt
+          npm ci --ignore-scripts --no-audit --no-fund
+      - name: Test documented callback behavior
+        run: '"${RUNNER_TEMP}/callback-tests/bin/python" .github/scripts/tests/callbacks.test.py -v'
+      - name: Test dashboard and JSONata examples
+        run: npm test

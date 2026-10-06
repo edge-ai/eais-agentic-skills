@@ -1,0 +1,15 @@
+**/.DS_Store
+node_modules/
+*.swp
+*.swo
+*~
+.env
+__pycache__/
+*.pyc
+
+# Agent installation directories are generated locally by skills installers.
+.agents/
+.claude/
+.codex/
+.cursor/
+.windsurf/

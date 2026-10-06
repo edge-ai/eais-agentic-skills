@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Synthetic people count</title>
+  <script type="module" src="./index.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 1.5rem; }
+    .sources { display: flex; flex-wrap: wrap; gap: 1rem; }
+    article { border: 1px solid; border-radius: .5rem; padding: 1rem; min-width: 10rem; }
+  </style>
+</head>
+<body>
+  <main id="app">
+    <h1>People count</h1>
+    <p role="status" v-if="error">{{ error }}</p>
+    <div class="sources">
+      <article v-for="source in sources" :key="source.source_id">
+        <h2>Source {{ source.source_id }}</h2>
+        <p>Count: {{ formatCount(source.count) }}</p>
+        <p>Alarm: {{ source.alarm }}</p>
+      </article>
+    </div>
+    <p>{{ messages.length }} retained messages (maximum 100)</p>
+    <button type="button" @click="clearMessages">Clear history</button>
+  </main>
+</body>
+</html>
