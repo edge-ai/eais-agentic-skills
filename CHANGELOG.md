@@ -16,6 +16,12 @@ the target station. The optional EAIS MCP guidance describes read-only tools.
 
 ## Unreleased
 
+## 1.0.0 — 2026-10-06
+
+Initial public release of the repository bundle. Individual skill versions
+remain AIP Builder 1.8, Node-RED Flow Architect 2.9, and Node-RED Dashboard
+Architect 1.8.
+
 - Add a complete synthetic two-source callback/alarm/dashboard reference and
   execute its exported wiring with the actual Node-RED core runtime locally.
   EAIS Alarm/subscription and Vue/UIBuilder transport remain explicitly stubbed.
